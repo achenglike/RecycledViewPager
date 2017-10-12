@@ -5,10 +5,12 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.GridPagerSnapHelper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.MoocGridPagerItemDecoration;
+import android.support.v7.widget.PageSelectedListener;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -45,7 +47,7 @@ public class CardViewBinder extends ItemViewBinder<Card, CardViewBinder.Holder> 
         RecyclerView recyclerView;
         MultiTypeAdapter multiTypeAdapter;
 
-        public Holder(View itemView, RecyclerView.RecycledViewPool recycledViewPool) {
+        public Holder(final View itemView, RecyclerView.RecycledViewPool recycledViewPool) {
             super(itemView);
             recyclerView = (RecyclerView) itemView;
             recyclerView.setRecycledViewPool(recycledViewPool);
@@ -58,6 +60,13 @@ public class CardViewBinder extends ItemViewBinder<Card, CardViewBinder.Holder> 
             multiTypeAdapter = new MultiTypeAdapter();
             multiTypeAdapter.register(Bean.class, new BeanViewBinder());
             recyclerView.setAdapter(multiTypeAdapter);
+
+            snapHelper.setPageSelectedListener(new PageSelectedListener() {
+                @Override
+                public void onPageSelected(int page) {
+                    Toast.makeText(itemView.getContext(), "选中了第"+page+"页", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         private void setPosts(List<Bean> beans) {

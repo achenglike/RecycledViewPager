@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.view.View;
 
+import static android.widget.NumberPicker.OnScrollListener.SCROLL_STATE_IDLE;
+
 /**
  * Created by like on 2017/9/22.
  */
@@ -19,6 +21,43 @@ public class GridPagerSnapHelper extends SnapHelper {
     private OrientationHelper mVerticalHelper;
     @Nullable
     private OrientationHelper mHorizontalHelper;
+
+    private PageSelectedListener pageSelectedListener;
+
+    @Override
+    public void attachToRecyclerView(@Nullable RecyclerView recyclerView) throws IllegalStateException {
+        if (this.mRecyclerView != null)
+            this.mRecyclerView.removeOnScrollListener(scrollListener);
+        super.attachToRecyclerView(recyclerView);
+        this.mRecyclerView.addOnScrollListener(scrollListener);
+    }
+
+    public PageSelectedListener getPageSelectedListener() {
+        return pageSelectedListener;
+    }
+
+    public void setPageSelectedListener(PageSelectedListener pageSelectedListener) {
+        this.pageSelectedListener = pageSelectedListener;
+    }
+
+    private RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            if (newState == SCROLL_STATE_IDLE
+                    && recyclerView.getLayoutManager() != null
+                    && recyclerView.getAdapter() != null
+                    && pageSelectedListener != null) {
+                // find center view now
+                View centerView = findSnapView(recyclerView.getLayoutManager());
+                int childPosition = recyclerView.getChildAdapterPosition(centerView);
+                int spanCount = ((GridLayoutManager)mRecyclerView.getLayoutManager()).getSpanCount();
+                if (childPosition > 0) {
+                    int page = childPosition/spanCount;
+                    pageSelectedListener.onPageSelected(page);
+                }
+            }
+        }
+    };
 
     @Nullable
     @Override
