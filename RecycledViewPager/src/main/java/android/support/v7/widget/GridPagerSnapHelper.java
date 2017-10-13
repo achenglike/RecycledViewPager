@@ -24,6 +24,8 @@ public class GridPagerSnapHelper extends SnapHelper {
 
     private PageSelectedListener pageSelectedListener;
 
+    private int currentPage;
+
     @Override
     public void attachToRecyclerView(@Nullable RecyclerView recyclerView) throws IllegalStateException {
         if (this.mRecyclerView != null)
@@ -45,15 +47,15 @@ public class GridPagerSnapHelper extends SnapHelper {
         public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
             if (newState == SCROLL_STATE_IDLE
                     && recyclerView.getLayoutManager() != null
-                    && recyclerView.getAdapter() != null
-                    && pageSelectedListener != null) {
+                    && recyclerView.getAdapter() != null) {
                 // find center view now
                 View centerView = findSnapView(recyclerView.getLayoutManager());
                 int childPosition = recyclerView.getChildAdapterPosition(centerView);
                 int spanCount = ((GridLayoutManager)mRecyclerView.getLayoutManager()).getSpanCount();
-                if (childPosition > 0) {
-                    int page = childPosition/spanCount;
-                    pageSelectedListener.onPageSelected(page);
+                if (childPosition >= 0) {
+                    currentPage = childPosition/spanCount;
+                    if (pageSelectedListener != null)
+                        pageSelectedListener.onPageSelected(currentPage);
                 }
             }
         }
@@ -246,6 +248,8 @@ public class GridPagerSnapHelper extends SnapHelper {
 
         for (int i = 0; i < childCount; i++) {
             final View child = layoutManager.getChildAt(i);
+            if (!isCurrentPageSide(layoutManager, child))
+                continue;
             int childStart = helper.getDecoratedStart(child);
 
             /** if child is more to start than previous closest, set it as closest  **/
@@ -255,6 +259,16 @@ public class GridPagerSnapHelper extends SnapHelper {
             }
         }
         return closestChild;
+    }
+
+    private boolean isCurrentPageSide(RecyclerView.LayoutManager layoutManager, View child) {
+        final int position = layoutManager.getPosition(child);
+        if (position == RecyclerView.NO_POSITION) {
+            return false;
+        }
+        int spanCount = ((GridLayoutManager)mRecyclerView.getLayoutManager()).getSpanCount();
+        int pagePosition = position/spanCount;
+        return pagePosition >= currentPage-1 && pagePosition <= currentPage+1;
     }
 
     @NonNull
